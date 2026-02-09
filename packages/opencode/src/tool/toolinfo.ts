@@ -126,24 +126,3 @@ function describeZodType(schema: z.ZodType): any {
   if (schema instanceof z.ZodEnum) return (schema as any).options
   return "any"
 }
-
-// Add new tool for pull request management
-export const pullRequestTool = {
-  id: "pullreq",
-  name: "Pull Request",
-  description: "Manage pull requests",
-  parameters: {
-    action: {
-      type: "string",
-      enum: ["create", "review", "merge", "close"],
-      required: true,
-    },
-    prId: {
-      type: "string",
-      required: true,
-    },
-    message: {
-      type: "string",
-    },
-  },
-} as const

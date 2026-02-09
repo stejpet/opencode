@@ -1,136 +1,320 @@
-# Pull Request Tool
+`Request tool info. Use to get tools not in your core set.
 
-This tool provides functionality to manage pull requests in the repository.
 
-## Features
 
-- Create new pull requests
-- Review existing pull requests
-- Merge approved pull requests
-- Close pull requests (e.g., when no longer needed)
 
-## Usage
 
-### Create a Pull Request
 
-```ts
-const result = await pullreq.execute({
-  action: "create",
-  prId: "PR-123",
-  message: "Add new feature for tool management"
-});
-```
+Extended tools available: todowrite, task, websearch, codesearch, skill, apply_patch, lsp, batch
 
-### Review a Pull Request
 
-```ts
-const result = await pullreq.execute({
-  action: "review",
-  prId: "PR-123",
-  message: "Looks good, please address the code style issues"
-});
-```
 
-### Merge a Pull Request
 
-```ts
-const result = await pullreq.execute({
-  action: "merge",
-  prId: "PR-123"
-});
-```
 
-### Close a Pull Request
+Usage: toolinfo({tools: ["toolname"]})
 
-```ts
-const result = await pullreq.execute({
-  action: "close",
-  prId: "PR-123",
-  message: "This PR is no longer needed"
-});
-```
 
-## Parameters
+- Single: toolinfo({tools: ["todowrite"]})
 
-- `action` (required): The action to perform on the pull request. Must be one of: `create`, `review`, `merge`, `close`
-- `prId` (required): The unique identifier for the pull request
-- `message` (optional): Additional message to include with the action
 
-## Error Handling
+- Multiple: toolinfo({tools: ["todowrite", "websearch"]})
 
-- If the pull request ID is not found, an error will be returned
-- If an invalid action is specified, an error will be returned
-- All operations are atomic and will fail if any validation fails
 
-## Integration
+- All: toolinfo({tools: ["all"]})
 
-This tool integrates with the repository's pull request system and can be used in conjunction with other tools like `git` and `toolinfo` to automate workflow tasks.
 
-## Examples
 
-### Example 1: Create a new pull request
 
-```ts
-const result = await pullreq.execute({
-  action: "create",
-  prId: "PR-123",
-  message: "Add new feature for tool management"
-});
-```
 
-### Example 2: Review a pull request
+If tool not found, response shows "Not Found: toolname". Use ["all"] to see complete list.
 
-```ts
-const result = await pullreq.execute({
-  action: "review",
-  prId: "PR-123",
-  message: "Looks good, please address the code style issues"
-});
-```
 
-### Example 3: Merge a pull request
 
-```ts
-const result = await pullreq.execute({
-  action: "merge",
-  prId: "PR-123"
-});
-```
 
-### Example 4: Close a pull request
 
-```ts
-const result = await pullreq.execute({
-  action: "close",
-  prId: "PR-123",
-  message: "This PR is no longer needed"
-});
-```
+Examples (set includeExamples: true for more):
 
-## Best Practices
 
-- Always verify the PR ID is correct before performing actions
-- Use descriptive messages when reviewing or closing PRs
-- Ensure all tests pass before merging
-- Review code changes thoroughly before approving
+1. User asks for todo list -> toolinfo({tools: ["todowrite"]}) -> use todowrite
 
-## Troubleshooting
 
-- If you receive an error about a non-existent PR, verify the PR ID and repository context
-- If you receive an error about an invalid action, ensure you're using one of the allowed values: `create`, `review`, `merge`, `close`
-- If you encounter permission issues, verify your access level to the repository
+2. User asks for research -> toolinfo({tools: ["websearch"]}) -> use websearch
 
-## Related Tools
 
-- `git`: For local git operations
-- `toolinfo`: To discover available tools
-- `session`: For managing session state
-- `log`: For logging actions and debugging
+3. Not sure what exists -> toolinfo({tools: ["all"]}) -> pick from list 
 
-## Status
 
-This tool is currently available and functional in the repository.
+  toolinfo({tools: ["todowrite"]})
 
-## Version
 
-1.0.0
+Step 3 - System responds with full tool definition
+
+
+Step 4 - Now use it:
+
+
+  todowrite({todos: [{id: "1", content: "Check emails", status: "pending", priority: "high"}]})
+
+
+
+
+
+Example 2: Request multiple tools at once
+
+
+Situation: User asks "Plan my project and research the latest libraries"
+
+
+Step 1 - Identify needs: I need both "todowrite" for planning AND "websearch" for research
+
+
+Step 2 - Request both:
+
+
+  toolinfo({tools: ["todowrite", "websearch"]})
+
+
+Step 3 - System provides both tool definitions
+
+
+Step 4 - Use them as needed:
+
+
+  todowrite({todos: [...]})
+
+
+  websearch({query: "latest React libraries 2025"})
+
+
+
+
+
+Example 3: List ALL available tools
+
+
+Situation: You are not sure which tool to use
+
+
+Step 1 - Request list:
+
+
+  toolinfo({tools: ["all"]})
+
+
+Step 2 - System shows every available tool with descriptions
+
+
+Step 3 - Choose the right one and request it specifically:
+
+
+  toolinfo({tools: ["skill"]})
+
+
+
+
+
+Example 4: Request tool with examples
+
+
+Situation: You need "task" tool but are not sure how to use it
+
+
+Step 1 - Request with examples flag:
+
+
+  toolinfo({tools: ["task"], includeExamples: true})
+
+
+Step 2 - System provides detailed description + usage examples
+
+
+Step 3 - Use the tool correctly:
+
+
+  task({description: "Refactor auth system", prompt: "Find all auth files and refactor them"})
+
+
+
+
+
+Example 5: Request after failing with current tools
+
+
+Situation: You tried bash/read/edit but the task is too complex
+
+
+Step 1 - Recognize need: This is too big for core tools, need "task" sub-agent
+
+
+Step 2 - Request it:
+
+
+  toolinfo({tools: ["task"]})
+
+
+Step 3 - Launch sub-agent:
+
+
+  task({description: "Complex refactoring", prompt: "Detailed instructions here"})
+
+
+
+
+
+Example 6: Discover custom/unlisted tools
+
+
+Situation: User mentions "Use the deployment tool" but "deployment" is not in the common list
+
+
+Step 1 - Try requesting it:
+
+
+  toolinfo({tools: ["deployment"]})
+
+
+Step 2a - If found: System provides the custom tool definition
+
+
+  deployment({action: "deploy", environment: "production"})
+
+
+Step 2b - If not found: Response shows "Not Found: deployment"
+
+
+  Step 3b - Discover what's actually available:
+
+
+    toolinfo({tools: ["all"]})
+
+
+  Step 4b - System shows complete list including custom tools
+
+
+  Step 5b - Find the right tool (maybe it's called "deploy" not "deployment")
+
+
+
+
+
+CRITICAL RULES:
+
+
+
+
+
+1. ALWAYS request first: You MUST call toolinfo BEFORE using any extended tool
+
+
+2. Do not guess tool names: Use the exact names from the list (todowrite, not "todo")
+
+
+3. Check the response: If toolinfo returns "Tool not found", that tool doesn't exist
+
+
+4. One request at a time: Request what you need, use it, then request more if needed
+
+
+5. Do not pretend: Never write tool calls as text - actually use the tool after requesting it
+
+
+
+
+
+Correct flow:
+
+
+WRONG: "I will use todowrite({...})" (just saying it, not doing it)
+
+
+RIGHT: toolinfo({tools: ["todowrite"]}) -> [system provides it] -> todowrite({...}) (actually calling it)
+
+
+
+
+
+Quick Reference:
+
+
+- Single tool: toolinfo({tools: ["toolname"]})
+
+
+- Multiple: toolinfo({tools: ["tool1", "tool2"]})
+
+
+- All tools: toolinfo({tools: ["all"]})
+
+
+- With examples: toolinfo({tools: ["toolname"], includeExamples: true})
+
+
+
+
+
+What happens when you request a tool:
+
+
+
+
+
+Tool exists: 
+
+
+  - Response shows: full description, parameters, usage info
+
+
+  - You can now use the tool immediately
+
+
+
+
+
+Tool doesn't exist:
+
+
+  - Response shows: "Not Found: toolname"
+
+
+  - Check the available tools list or use ["all"] to see what's available
+
+
+  - Tool names are case-sensitive and must match exactly
+
+
+
+
+
+Example - Tool not found:
+
+
+You call: toolinfo({tools: ["todo"]})
+
+
+Response: "Not Found: todo"
+
+
+Why: The tool is called "todowrite" not "todo"
+
+
+Fix: Call toolinfo({tools: ["todowrite"]}) instead
+
+
+
+
+
+Example - Multiple tools, one not found:
+
+
+You call: toolinfo({tools: ["todowrite", "magicwand"]})
+
+
+Response: 
+
+
+  - Shows full info for "todowrite" [checkmark]
+
+
+  - Shows "Not Found: magicwand" [x]
+
+
+Result: You get the valid tool and know the other doesn't exist`,
