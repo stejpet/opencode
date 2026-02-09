@@ -27,6 +27,13 @@ import { LspTool } from "./lsp"
 import { Truncate } from "./truncation"
 import { PlanExitTool, PlanEnterTool } from "./plan"
 import { ApplyPatchTool } from "./apply_patch"
+import { ToolInfoTool } from "./toolinfo"
+
+// Core tools always available even in lite mode
+const CORE_TOOLS = [InvalidTool, BashTool, ReadTool, GlobTool, GrepTool, EditTool, WriteTool, WebFetchTool]
+
+// Extended tools available on request
+const EXTENDED_TOOLS = [TaskTool, TodoWriteTool, WebSearchTool, CodeSearchTool, SkillTool, ApplyPatchTool]
 
 export namespace ToolRegistry {
   const log = Log.create({ service: "tool.registry" })
@@ -91,32 +98,35 @@ export namespace ToolRegistry {
     custom.push(tool)
   }
 
-  async function all(): Promise<Tool.Info[]> {
+  export async function all(): Promise<Tool.Info[]> {
     const custom = await state().then((x) => x.custom)
     const config = await Config.get()
 
     return [
-      InvalidTool,
+      ...CORE_TOOLS,
+      ToolInfoTool,
       ...(["app", "cli", "desktop"].includes(Flag.OPENCODE_CLIENT) ? [QuestionTool] : []),
-      BashTool,
-      ReadTool,
-      GlobTool,
-      GrepTool,
-      EditTool,
-      WriteTool,
-      TaskTool,
-      WebFetchTool,
-      TodoWriteTool,
-      // TodoReadTool,
-      WebSearchTool,
-      CodeSearchTool,
-      SkillTool,
-      ApplyPatchTool,
+      ...EXTENDED_TOOLS,
       ...(Flag.OPENCODE_EXPERIMENTAL_LSP_TOOL ? [LspTool] : []),
       ...(config.experimental?.batch_tool === true ? [BatchTool] : []),
       ...(Flag.OPENCODE_EXPERIMENTAL_PLAN_MODE && Flag.OPENCODE_CLIENT === "cli" ? [PlanExitTool, PlanEnterTool] : []),
       ...custom,
     ]
+  }
+
+  /**
+   * Lite mode: only core tools + toolinfo for local/slow models
+   * Core: bash, read, edit, write, glob, grep, webfetch, invalid
+   * Plus: toolinfo (to request more tools), question (if CLI), custom skill tools
+   */
+  export async function lite(agent?: Agent.Info): Promise<Tool.Info[]> {
+    const custom = await state().then((x) => x.custom)
+    const questionTool = ["app", "cli", "desktop"].includes(Flag.OPENCODE_CLIENT) ? [QuestionTool] : []
+
+    // Include skill tool if user has custom skills
+    const customSkill = custom.filter((t) => t.id === "skill")
+
+    return [...CORE_TOOLS, ToolInfoTool, ...questionTool, ...customSkill]
   }
 
   export async function ids() {
@@ -129,10 +139,11 @@ export namespace ToolRegistry {
       modelID: string
     },
     agent?: Agent.Info,
+    mode?: "full" | "lite",
   ) {
-    const tools = await all()
+    const toolList = mode === "lite" ? await lite(agent) : await all()
     const result = await Promise.all(
-      tools
+      toolList
         .filter((t) => {
           // Enable websearch/codesearch for zen users OR via enable flag
           if (t.id === "codesearch" || t.id === "websearch") {

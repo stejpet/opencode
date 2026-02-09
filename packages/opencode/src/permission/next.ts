@@ -61,7 +61,9 @@ export namespace PermissionNext {
   }
 
   export function merge(...rulesets: Ruleset[]): Ruleset {
-    return rulesets.flat()
+    return rulesets
+      .flat()
+      .filter((rule): rule is Rule => rule != null && typeof rule === "object" && "permission" in rule)
   }
 
   export const Request = z
@@ -232,7 +234,8 @@ export namespace PermissionNext {
     const merged = merge(...rulesets)
     log.info("evaluate", { permission, pattern, ruleset: merged })
     const match = merged.findLast(
-      (rule) => Wildcard.match(permission, rule.permission) && Wildcard.match(pattern, rule.pattern),
+      (rule) =>
+        rule && rule.permission && Wildcard.match(permission, rule.permission) && Wildcard.match(pattern, rule.pattern),
     )
     return match ?? { action: "ask", permission, pattern: "*" }
   }
@@ -244,7 +247,7 @@ export namespace PermissionNext {
     for (const tool of tools) {
       const permission = EDIT_TOOLS.includes(tool) ? "edit" : tool
 
-      const rule = ruleset.findLast((r) => Wildcard.match(permission, r.permission))
+      const rule = ruleset.findLast((r) => r && r.permission && Wildcard.match(permission, r.permission))
       if (!rule) continue
       if (rule.pattern === "*" && rule.action === "deny") result.add(tool)
     }

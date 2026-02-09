@@ -19,13 +19,24 @@ const Title = (props: { session: Accessor<Session> }) => {
   )
 }
 
-const ContextInfo = (props: { context: Accessor<string | undefined>; cost: Accessor<string> }) => {
+const ContextInfo = (props: {
+  context: Accessor<string | undefined>
+  cost: Accessor<string>
+  liteMode: Accessor<boolean>
+}) => {
   const { theme } = useTheme()
   return (
     <Show when={props.context()}>
-      <text fg={theme.textMuted} wrapMode="none" flexShrink={0}>
-        {props.context()} ({props.cost()})
-      </text>
+      <box flexDirection="row" gap={1} flexShrink={0}>
+        <Show when={props.liteMode()}>
+          <text fg={theme.accent} wrapMode="none">
+            LITE
+          </text>
+        </Show>
+        <text fg={theme.textMuted} wrapMode="none">
+          {props.context()} ({props.cost()})
+        </text>
+      </box>
     </Show>
   )
 }
@@ -60,6 +71,10 @@ export function Header() {
     return result
   })
 
+  const liteMode = createMemo(() => {
+    return sync.data.config.experimental?.lite_mode ?? false
+  })
+
   const { theme } = useTheme()
   const keybind = useKeybind()
   const command = useCommandDialog()
@@ -88,7 +103,7 @@ export function Header() {
                   <b>Subagent session</b>
                 </text>
                 <box flexDirection="row" gap={1} flexShrink={0}>
-                  <ContextInfo context={context} cost={cost} />
+                  <ContextInfo context={context} cost={cost} liteMode={liteMode} />
                   <text fg={theme.textMuted}>v{Installation.VERSION}</text>
                 </box>
               </box>
@@ -130,7 +145,7 @@ export function Header() {
             <box flexDirection={narrow() ? "column" : "row"} justifyContent="space-between" gap={1}>
               <Title session={session} />
               <box flexDirection="row" gap={1} flexShrink={0}>
-                <ContextInfo context={context} cost={cost} />
+                <ContextInfo context={context} cost={cost} liteMode={liteMode} />
                 <text fg={theme.textMuted}>v{Installation.VERSION}</text>
               </box>
             </box>

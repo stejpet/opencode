@@ -1182,6 +1182,12 @@ export namespace Config {
             .positive()
             .optional()
             .describe("Timeout in milliseconds for model context protocol (MCP) requests"),
+          lite_mode: z
+            .boolean()
+            .optional()
+            .describe(
+              "Enable lite mode for local/slower models. Reduces token usage by: (1) loading only core tools initially, (2) using minimal tool descriptions, (3) enabling aggressive context compaction. Use 'toolinfo' tool to request additional tools or full descriptions when needed.",
+            ),
         })
         .optional(),
     })

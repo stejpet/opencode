@@ -34,6 +34,7 @@ import { spawn } from "child_process"
 import { Command } from "../command"
 import { $, fileURLToPath, pathToFileURL } from "bun"
 import { ConfigMarkdown } from "../config/markdown"
+import { Config } from "../config/config"
 import { SessionSummary } from "./summary"
 import { NamedError } from "@opencode-ai/util/error"
 import { fn } from "@/util/fn"
@@ -569,6 +570,9 @@ export namespace SessionPrompt {
       const lastUserMsg = msgs.findLast((m) => m.info.role === "user")
       const bypassAgentCheck = lastUserMsg?.parts.some((p) => p.type === "agent") ?? false
 
+      const config = await Config.get()
+      const liteMode = config.experimental?.lite_mode ?? false
+
       const tools = await resolveTools({
         agent,
         session,
@@ -577,6 +581,7 @@ export namespace SessionPrompt {
         processor,
         bypassAgentCheck,
         messages: msgs,
+        liteMode,
       })
 
       if (step === 1) {
@@ -667,6 +672,7 @@ export namespace SessionPrompt {
     processor: SessionProcessor.Info
     bypassAgentCheck: boolean
     messages: MessageV2.WithParts[]
+    liteMode?: boolean
   }) {
     using _ = log.time("resolveTools")
     const tools: Record<string, AITool> = {}
@@ -706,14 +712,48 @@ export namespace SessionPrompt {
       },
     })
 
-    for (const item of await ToolRegistry.tools(
+    // Use lite mode for local/slow models - reduces token usage significantly
+    const toolMode = input.liteMode ? "lite" : "full"
+
+    // Get FRESH session data to see updated metadata (not stale cached version)
+    const freshSession = await Session.get(input.session.id)
+
+    // Get base tools (core in lite mode, all in full mode)
+    let toolList = await ToolRegistry.tools(
       { modelID: input.model.api.id, providerID: input.model.providerID },
       input.agent,
-    )) {
+      toolMode,
+    )
+
+    // In lite mode, also include tools that were previously requested via toolinfo
+    // Use freshSession instead of input.session to get updated metadata
+    if (input.liteMode && freshSession?.metadata?.requestedTools) {
+      const allTools = await ToolRegistry.all()
+      const requestedToolIds = freshSession.metadata.requestedTools as string[]
+
+      for (const toolId of requestedToolIds) {
+        // Skip if already in the list
+        if (toolList.some((t) => t.id === toolId)) continue
+
+        // Find the tool in the full registry and initialize it
+        const extendedTool = allTools.find((t) => t.id === toolId)
+        if (extendedTool) {
+          toolList.push({
+            id: extendedTool.id,
+            ...(await extendedTool.init({ agent: input.agent })),
+          })
+        }
+      }
+    }
+
+    for (const item of toolList) {
+      // In lite mode, use minimal descriptions to save tokens
+      const description = input.liteMode ? createMinimalDescription(item.id, item.description) : item.description
+
       const schema = ProviderTransform.schema(input.model, z.toJSONSchema(item.parameters))
       tools[item.id] = tool({
         id: item.id as any,
-        description: item.description,
+        description,
         inputSchema: jsonSchema(schema as any),
         async execute(args, options) {
           const ctx = context(args, options)
@@ -1859,5 +1899,34 @@ NOTE: At any point in time through this workflow you should feel free to ask the
         },
         { touch: false },
       )
+  }
+
+  /**
+   * Create ultra-minimal tool description for lite mode to get under 5k tokens.
+   * Single line only - no examples, no verbose explanations.
+   */
+  function createMinimalDescription(toolId: string, fullDescription: string): string {
+    // Ultra-compact descriptions - single line only
+    const minimalDescriptions: Record<string, string> = {
+      bash: "Run shell commands. Args: command, description, timeout?, workdir?",
+      read: "Read files. Args: filePath, limit?, offset?",
+      edit: "Edit files. Args: filePath, oldString, newString",
+      write: "Write files. Args: filePath, content",
+      glob: "Find files. Args: pattern, path?",
+      grep: "Search content. Args: pattern, path?",
+      webfetch: "Fetch web. Args: url, format?",
+      toolinfo: "Get tools. Args: tools[], includeExamples?",
+      invalid: "Invalid tool handler",
+      question: "Ask user. Args: questions[]",
+    }
+
+    // Return minimal description if available
+    if (minimalDescriptions[toolId]) {
+      return minimalDescriptions[toolId]
+    }
+
+    // For unknown tools, extract first line only (max 60 chars)
+    const firstLine = fullDescription.split("\n")[0].slice(0, 60)
+    return firstLine
   }
 }
