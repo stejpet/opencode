@@ -799,6 +799,9 @@ export type Session = {
     snapshot?: string
     diff?: string
   }
+  metadata?: {
+    [key: string]: unknown
+  }
 }
 
 export type EventSessionCreated = {
@@ -1845,6 +1848,10 @@ export type Config = {
      * Timeout in milliseconds for model context protocol (MCP) requests
      */
     mcp_timeout?: number
+    /**
+     * Enable lite mode for local models. Reduces token usage by loading only core tools initially with minimal descriptions. Request additional tools via 'toolinfo' when needed.
+     */
+    lite_mode?: boolean
   }
 }
 

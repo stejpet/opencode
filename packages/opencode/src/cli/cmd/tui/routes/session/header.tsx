@@ -19,11 +19,7 @@ const Title = (props: { session: Accessor<Session> }) => {
   )
 }
 
-const ContextInfo = (props: {
-  context: Accessor<string | undefined>
-  cost: Accessor<string>
-  liteMode: Accessor<boolean>
-}) => {
+const ContextInfo = (props: { context: Accessor<string | undefined>; cost: Accessor<string>; liteMode: Accessor<boolean> }) => {
   const { theme } = useTheme()
   return (
     <Show when={props.context()}>
