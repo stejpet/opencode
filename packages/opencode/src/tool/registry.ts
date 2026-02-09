@@ -114,16 +114,10 @@ export namespace ToolRegistry {
     ]
   }
 
-  /**
-   * Lite mode: only core tools + toolinfo for local/slow models
-   * Core: bash, read, edit, write, glob, grep, webfetch, invalid
-   * Plus: toolinfo (to request more tools), question (if CLI), custom skill tools
-   */
   export async function lite(agent?: Agent.Info): Promise<Tool.Info[]> {
     const custom = await state().then((x) => x.custom)
     const questionTool = ["app", "cli", "desktop"].includes(Flag.OPENCODE_CLIENT) ? [QuestionTool] : []
 
-    // Include skill tool if user has custom skills
     const customSkill = custom.filter((t) => t.id === "skill")
 
     return [...CORE_TOOLS, ToolInfoTool, ...questionTool, ...customSkill]

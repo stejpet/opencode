@@ -1186,7 +1186,7 @@ export namespace Config {
             .boolean()
             .optional()
             .describe(
-              "Enable lite mode for local/slower models. Reduces token usage by: (1) loading only core tools initially, (2) using minimal tool descriptions, (3) enabling aggressive context compaction. Use 'toolinfo' tool to request additional tools or full descriptions when needed.",
+              "Enable lite mode for local models. Reduces token usage by loading only core tools initially with minimal descriptions. Request additional tools via 'toolinfo' when needed.",
             ),
         })
         .optional(),
