@@ -3,116 +3,11 @@ import { Tool } from "./tool"
 import { ToolRegistry } from "./registry"
 import type { Agent } from "../agent/agent"
 import { Session } from "../session"
+import DESCRIPTION from "./toolinfo.txt"
 
 export const ToolInfoTool = Tool.define("toolinfo", async () => {
   return {
-    description: `Request tool info. Use to get tools not in your core set.
-
-Extended tools available: todowrite, task, websearch, codesearch, skill, apply_patch, lsp, batch
-
-Usage: toolinfo({tools: ["toolname"]})
-- Single: toolinfo({tools: ["todowrite"]})
-- Multiple: toolinfo({tools: ["todowrite", "websearch"]})
-- All: toolinfo({tools: ["all"]})
-
-If tool not found, response shows "Not Found: toolname". Use ["all"] to see complete list.
-
-Examples (set includeExamples: true for more):
-1. User asks for todo list -> toolinfo({tools: ["todowrite"]}) -> use todowrite
-2. User asks for research -> toolinfo({tools: ["websearch"]}) -> use websearch
-3. Not sure what exists -> toolinfo({tools: ["all"]}) -> pick from list 
-  toolinfo({tools: ["todowrite"]})
-Step 3 - System responds with full tool definition
-Step 4 - Now use it:
-  todowrite({todos: [{id: "1", content: "Check emails", status: "pending", priority: "high"}]})
-
-Example 2: Request multiple tools at once
-Situation: User asks "Plan my project and research the latest libraries"
-Step 1 - Identify needs: I need both "todowrite" for planning AND "websearch" for research
-Step 2 - Request both:
-  toolinfo({tools: ["todowrite", "websearch"]})
-Step 3 - System provides both tool definitions
-Step 4 - Use them as needed:
-  todowrite({todos: [...]})
-  websearch({query: "latest React libraries 2025"})
-
-Example 3: List ALL available tools
-Situation: You are not sure which tool to use
-Step 1 - Request list:
-  toolinfo({tools: ["all"]})
-Step 2 - System shows every available tool with descriptions
-Step 3 - Choose the right one and request it specifically:
-  toolinfo({tools: ["skill"]})
-
-Example 4: Request tool with examples
-Situation: You need "task" tool but are not sure how to use it
-Step 1 - Request with examples flag:
-  toolinfo({tools: ["task"], includeExamples: true})
-Step 2 - System provides detailed description + usage examples
-Step 3 - Use the tool correctly:
-  task({description: "Refactor auth system", prompt: "Find all auth files and refactor them"})
-
-Example 5: Request after failing with current tools
-Situation: You tried bash/read/edit but the task is too complex
-Step 1 - Recognize need: This is too big for core tools, need "task" sub-agent
-Step 2 - Request it:
-  toolinfo({tools: ["task"]})
-Step 3 - Launch sub-agent:
-  task({description: "Complex refactoring", prompt: "Detailed instructions here"})
-
-Example 6: Discover custom/unlisted tools
-Situation: User mentions "Use the deployment tool" but "deployment" is not in the common list
-Step 1 - Try requesting it:
-  toolinfo({tools: ["deployment"]})
-Step 2a - If found: System provides the custom tool definition
-  deployment({action: "deploy", environment: "production"})
-Step 2b - If not found: Response shows "Not Found: deployment"
-  Step 3b - Discover what's actually available:
-    toolinfo({tools: ["all"]})
-  Step 4b - System shows complete list including custom tools
-  Step 5b - Find the right tool (maybe it's called "deploy" not "deployment")
-
-CRITICAL RULES:
-
-1. ALWAYS request first: You MUST call toolinfo BEFORE using any extended tool
-2. Do not guess tool names: Use the exact names from the list (todowrite, not "todo")
-3. Check the response: If toolinfo returns "Tool not found", that tool doesn't exist
-4. One request at a time: Request what you need, use it, then request more if needed
-5. Do not pretend: Never write tool calls as text - actually use the tool after requesting it
-
-Correct flow:
-WRONG: "I will use todowrite({...})" (just saying it, not doing it)
-RIGHT: toolinfo({tools: ["todowrite"]}) -> [system provides it] -> todowrite({...}) (actually calling it)
-
-Quick Reference:
-- Single tool: toolinfo({tools: ["toolname"]})
-- Multiple: toolinfo({tools: ["tool1", "tool2"]})
-- All tools: toolinfo({tools: ["all"]})
-- With examples: toolinfo({tools: ["toolname"], includeExamples: true})
-
-What happens when you request a tool:
-
-Tool exists: 
-  - Response shows: full description, parameters, usage info
-  - You can now use the tool immediately
-
-Tool doesn't exist:
-  - Response shows: "Not Found: toolname"
-  - Check the available tools list or use ["all"] to see what's available
-  - Tool names are case-sensitive and must match exactly
-
-Example - Tool not found:
-You call: toolinfo({tools: ["todo"]})
-Response: "Not Found: todo"
-Why: The tool is called "todowrite" not "todo"
-Fix: Call toolinfo({tools: ["todowrite"]}) instead
-
-Example - Multiple tools, one not found:
-You call: toolinfo({tools: ["todowrite", "magicwand"]})
-Response: 
-  - Shows full info for "todowrite" [checkmark]
-  - Shows "Not Found: magicwand" [x]
-Result: You get the valid tool and know the other doesn't exist`,
+    description: DESCRIPTION,
     parameters: z.object({
       tools: z
         .array(z.string())
@@ -231,3 +126,24 @@ function describeZodType(schema: z.ZodType): any {
   if (schema instanceof z.ZodEnum) return (schema as any).options
   return "any"
 }
+
+// Add new tool for pull request management
+export const pullRequestTool = {
+  id: "pullreq",
+  name: "Pull Request",
+  description: "Manage pull requests",
+  parameters: {
+    action: {
+      type: "string",
+      enum: ["create", "review", "merge", "close"],
+      required: true,
+    },
+    prId: {
+      type: "string",
+      required: true,
+    },
+    message: {
+      type: "string",
+    },
+  },
+} as const

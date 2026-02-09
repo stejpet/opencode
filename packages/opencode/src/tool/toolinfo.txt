@@ -1,0 +1,136 @@
+# Pull Request Tool
+
+This tool provides functionality to manage pull requests in the repository.
+
+## Features
+
+- Create new pull requests
+- Review existing pull requests
+- Merge approved pull requests
+- Close pull requests (e.g., when no longer needed)
+
+## Usage
+
+### Create a Pull Request
+
+```ts
+const result = await pullreq.execute({
+  action: "create",
+  prId: "PR-123",
+  message: "Add new feature for tool management"
+});
+```
+
+### Review a Pull Request
+
+```ts
+const result = await pullreq.execute({
+  action: "review",
+  prId: "PR-123",
+  message: "Looks good, please address the code style issues"
+});
+```
+
+### Merge a Pull Request
+
+```ts
+const result = await pullreq.execute({
+  action: "merge",
+  prId: "PR-123"
+});
+```
+
+### Close a Pull Request
+
+```ts
+const result = await pullreq.execute({
+  action: "close",
+  prId: "PR-123",
+  message: "This PR is no longer needed"
+});
+```
+
+## Parameters
+
+- `action` (required): The action to perform on the pull request. Must be one of: `create`, `review`, `merge`, `close`
+- `prId` (required): The unique identifier for the pull request
+- `message` (optional): Additional message to include with the action
+
+## Error Handling
+
+- If the pull request ID is not found, an error will be returned
+- If an invalid action is specified, an error will be returned
+- All operations are atomic and will fail if any validation fails
+
+## Integration
+
+This tool integrates with the repository's pull request system and can be used in conjunction with other tools like `git` and `toolinfo` to automate workflow tasks.
+
+## Examples
+
+### Example 1: Create a new pull request
+
+```ts
+const result = await pullreq.execute({
+  action: "create",
+  prId: "PR-123",
+  message: "Add new feature for tool management"
+});
+```
+
+### Example 2: Review a pull request
+
+```ts
+const result = await pullreq.execute({
+  action: "review",
+  prId: "PR-123",
+  message: "Looks good, please address the code style issues"
+});
+```
+
+### Example 3: Merge a pull request
+
+```ts
+const result = await pullreq.execute({
+  action: "merge",
+  prId: "PR-123"
+});
+```
+
+### Example 4: Close a pull request
+
+```ts
+const result = await pullreq.execute({
+  action: "close",
+  prId: "PR-123",
+  message: "This PR is no longer needed"
+});
+```
+
+## Best Practices
+
+- Always verify the PR ID is correct before performing actions
+- Use descriptive messages when reviewing or closing PRs
+- Ensure all tests pass before merging
+- Review code changes thoroughly before approving
+
+## Troubleshooting
+
+- If you receive an error about a non-existent PR, verify the PR ID and repository context
+- If you receive an error about an invalid action, ensure you're using one of the allowed values: `create`, `review`, `merge`, `close`
+- If you encounter permission issues, verify your access level to the repository
+
+## Related Tools
+
+- `git`: For local git operations
+- `toolinfo`: To discover available tools
+- `session`: For managing session state
+- `log`: For logging actions and debugging
+
+## Status
+
+This tool is currently available and functional in the repository.
+
+## Version
+
+1.0.0
