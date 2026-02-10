@@ -8,6 +8,7 @@ import { Session } from "../packages/opencode/src/session"
 import { SessionPrompt } from "../packages/opencode/src/session/prompt"
 import { Instance } from "../packages/opencode/src/project/instance"
 import { InstanceBootstrap } from "../packages/opencode/src/project/bootstrap"
+import { Config } from "../packages/opencode/src/config/config"
 import * as fs from "fs/promises"
 import * as path from "path"
 
@@ -30,6 +31,13 @@ async function runTest(liteMode: boolean) {
       directory: process.cwd(),
       init: InstanceBootstrap,
       fn: async () => {
+        // Set lite mode in config
+        if (liteMode) {
+          const config = await Config.get()
+          config.experimental = { ...config.experimental, lite_mode: true }
+          console.log(`Lite mode enabled in config`)
+        }
+
         // Create a session
         const session = await Session.create({
           title: `Test - ${modeName} mode`,
