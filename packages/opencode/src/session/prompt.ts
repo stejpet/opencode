@@ -723,30 +723,21 @@ export namespace SessionPrompt {
       },
     })
 
-    // Use lite mode for local/slow models - reduces token usage significantly
     const toolMode = input.liteMode ? "lite" : "full"
-
-    // Get FRESH session data to see updated metadata (not stale cached version)
     const freshSession = await Session.get(input.session.id)
-
-    // Get base tools (core in lite mode, all in full mode)
     let toolList = await ToolRegistry.tools(
       { modelID: input.model.api.id, providerID: input.model.providerID },
       input.agent,
       toolMode,
     )
 
-    // In lite mode, also include tools that were previously requested via toolinfo
-    // Use freshSession instead of input.session to get updated metadata
     if (input.liteMode && freshSession?.metadata?.requestedTools) {
       const allTools = await ToolRegistry.all()
       const requestedToolIds = freshSession.metadata.requestedTools as string[]
 
       for (const toolId of requestedToolIds) {
-        // Skip if already in the list
         if (toolList.some((t) => t.id === toolId)) continue
 
-        // Find the tool in the full registry and initialize it
         const extendedTool = allTools.find((t) => t.id === toolId)
         if (extendedTool) {
           toolList.push({
@@ -758,7 +749,6 @@ export namespace SessionPrompt {
     }
 
     for (const item of toolList) {
-      // In lite mode, use minimal descriptions to save tokens
       const description = input.liteMode ? createMinimalDescription(item.id, item.description) : item.description
 
       const schema = ProviderTransform.schema(input.model, z.toJSONSchema(item.parameters))
