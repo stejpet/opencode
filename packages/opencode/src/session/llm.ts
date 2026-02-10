@@ -253,9 +253,17 @@ export namespace LLM {
               messages: input.messages,
               tools: Object.keys(input.tools || {}),
             }
+            const logContent = JSON.stringify(logData, null, 2)
             console.log("\n=== FULL PROMPT LOG ===\n")
-            console.log(JSON.stringify(logData, null, 2))
+            console.log(logContent)
             console.log("\n=== END PROMPT LOG ===\n")
+            // Also write to file for persistence
+            const fs = require("fs")
+            const path = require("path")
+            const outputDir = process.env.DEBUG_OUTPUT_DIR || "./test-output"
+            const filename = `prompt-${input.sessionID}-${Date.now()}.json`
+            fs.mkdirSync(outputDir, { recursive: true })
+            fs.writeFileSync(path.join(outputDir, filename), logContent)
           }
           return {}
         })(),
