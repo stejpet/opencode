@@ -242,6 +242,23 @@ export namespace LLM {
         ...input.messages,
       ],
       model: wrapLanguageModel({
+        ...(() => {
+          // DEBUG: Log full prompt for testing
+          if (process.env.DEBUG_PROMPT === "true") {
+            const logData = {
+              timestamp: new Date().toISOString(),
+              sessionID: input.sessionID,
+              model: input.model,
+              system: system,
+              messages: input.messages,
+              tools: Object.keys(input.tools || {}),
+            }
+            console.log("\n=== FULL PROMPT LOG ===\n")
+            console.log(JSON.stringify(logData, null, 2))
+            console.log("\n=== END PROMPT LOG ===\n")
+          }
+          return {}
+        })(),
         model: language,
         middleware: [
           {
