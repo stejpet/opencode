@@ -80,16 +80,33 @@ export const ToolInfoTool = Tool.define("toolinfo", async () => {
         }
       }
 
-      let output = `# Available Tools\n\n`
+      // When "all" is requested, return simplified list to save tokens
+      const isAllRequest = params.tools.includes("all")
 
-      for (const tool of availableTools) {
-        output += `## ${tool.id}\n`
-        output += `${tool.description}\n\n`
-        output += `**Parameters:**\n${JSON.stringify(tool.parameters, null, 2)}\n\n`
-      }
+      let output: string
+      if (isAllRequest) {
+        output = `# All Available Tools\n\n**Core tools** (available now):\n- bash, read, edit, write, glob, grep, webfetch, question, toolinfo\n\n**Extended tools** (request individually for details):\n${availableTools
+          .filter(
+            (t) =>
+              !["bash", "read", "edit", "write", "glob", "grep", "webfetch", "question", "toolinfo"].includes(t.id),
+          )
+          .map((t) => `- ${t.id}`)
+          .join(
+            "\n",
+          )}\n\nRequest specific tool info:\n- toolinfo({tools: ["websearch"]})\n- toolinfo({tools: ["todowrite", "task"]})\n- toolinfo({tools: ["skill"], includeExamples: true})`
+      } else {
+        // Handle not found at the start for visibility
+        let notFoundOutput = ""
+        if (notFound.length > 0) {
+          notFoundOutput = `**Not Found:** ${notFound.map((t) => t.id).join(", ")}\n\n**Tip:** Use toolinfo({tools: ["all"]}) to see all available tools.\n\n`
+        }
 
-      if (notFound.length > 0) {
-        output += `\n**Not Found:** ${notFound.map((t) => t.id).join(", ")}\n`
+        output = `# Available Tools\n\n${notFoundOutput}`
+        for (const tool of availableTools) {
+          output += `## ${tool.id}\n`
+          output += `${tool.description}\n\n`
+          output += `**Parameters:**\n${JSON.stringify(tool.parameters, null, 2)}\n\n`
+        }
       }
 
       return {

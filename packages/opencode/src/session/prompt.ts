@@ -1926,7 +1926,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
       glob: "Find files. Args: pattern, path?",
       grep: "Search content. Args: pattern, path?",
       webfetch: "Fetch web. Args: url, format?",
-      toolinfo: "Get tools. Args: tools[], includeExamples?",
+      toolinfo: "Request additional tools not in core set. Args: tools[], includeExamples?",
       invalid: "Invalid tool handler",
       question: "Ask user. Args: questions[]",
     }

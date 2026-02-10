@@ -1,4 +1,4 @@
-Request tool info. Use to get tools not in your core set.
+Request additional tools beyond your core toolset (bash, read, edit, write, glob, grep, webfetch). REQUIRED before using any extended tool like todowrite, task, websearch, codesearch, skill, apply_patch, lsp, batch.
 
 Extended tools available: todowrite, task, websearch, codesearch, skill, apply_patch, lsp, batch
 
