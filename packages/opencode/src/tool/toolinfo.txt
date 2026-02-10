@@ -1,4 +1,6 @@
-Request additional tools beyond your core toolset (bash, read, edit, write, glob, grep, webfetch). REQUIRED before using any extended tool like todowrite, task, websearch, codesearch, skill, apply_patch, lsp, batch.
+Request extended tools (todowrite, task, websearch, codesearch, skill, apply_patch, lsp, batch). REQUIRED before using any extended tool - you MUST call this first to get extended tools loaded.
+
+Core tools always available: bash, read, edit, write, glob, grep, webfetch, toolinfo, question
 
 Extended tools available: todowrite, task, websearch, codesearch, skill, apply_patch, lsp, batch
 
